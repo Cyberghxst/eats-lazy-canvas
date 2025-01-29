@@ -1,15 +1,15 @@
+import { LazyCanvas, TextLayer, StringTextAlign, TextAlign } from '@hitomihiumi/lazy-canvas'
 import type { CompiledFunction } from 'easy-api.ts/lib/classes/internal/CompiledFunction'
 import { APIFunction, Data, Errors, ParamType, Util } from 'easy-api.ts'
-import { LazyCanvas, ArcLayer } from '@hitomihiumi/lazy-canvas'
 import { makeId, makeUsage } from '@structures/EATSLazyCanvas'
 import CreateCanvas from '@functions/createCanvas'
 
 /**
- * Function that creates a new arc layer.
+ * Function that creates a new text layer.
  */
-export default class AddArcLayer extends APIFunction {
-    name = '$addArcLayer'
-    description = 'Adds an arc layer to the canvas.'
+export default class AddTextLayer extends APIFunction {
+    name = '$addTextLayer'
+    description = 'Adds a text layer to the canvas.'
     parameters = [
         {
             name: 'X',
@@ -28,8 +28,16 @@ export default class AddArcLayer extends APIFunction {
             defaultValue: null
         },
         {
-            name: 'Radius',
-            description: 'The radius of the arc.',
+            name: 'Font Name',
+            description: 'The font name of the text.',
+            type: ParamType.String,
+            required: true,
+            rest: false,
+            defaultValue: null
+        },
+        {
+            name: 'Font Size',
+            description: 'The font size of the text.',
             type: ParamType.Number,
             required: true,
             rest: false,
@@ -37,27 +45,28 @@ export default class AddArcLayer extends APIFunction {
         },
         {
             name: 'Color',
-            description: 'The color of the arc.',
+            description: 'The color of the text.',
             type: ParamType.String,
             required: true,
             rest: false,
             defaultValue: null
         },
         {
-            name: 'Filled',
-            description: 'Whether the arc should be filled.',
-            type: ParamType.Boolean,
-            required: false,
+            name: 'Text',
+            description: 'The text to display.',
+            type: ParamType.String,
+            required: true,
             rest: false,
-            defaultValue: 'true'
+            defaultValue: null
         },
         {
-            name: 'Stroke',
-            description: 'The stroke of the arc.',
-            type: ParamType.Number,
+            name: 'Align',
+            description: 'The alignment of the text.',
+            type: ParamType.String,
             required: false,
             rest: false,
-            defaultValue: '1'
+            defaultValue: 'left',
+            allowedValues: Object.values(TextAlign)
         },
         {
             name: 'ID',
@@ -73,24 +82,24 @@ export default class AddArcLayer extends APIFunction {
     compile = true
     aliases = []
     parent = new CreateCanvas()
-    run = async function(this: CompiledFunction, d: Data, [x, y, radius, color, filled, stroke, id]: string[]) {
+    run = async function(this: CompiledFunction, d: Data, [x, y, fontName, fontSize, color, text, align, id]: string[]) {
         // Checking the types.
         if (!Util.isNumber(x)) throw new Errors.InvalidType(this.name, 'x number', x);
         if (!Util.isNumber(y)) throw new Errors.InvalidType(this.name, 'y number', y);
-        if (!Util.isNumber(radius)) throw new Errors.InvalidType(this.name, 'radius number', radius);
         if (!Util.isValidHex(color)) throw new Errors.InvalidType(this.name, 'color string', color);
 
         // Getting the lazy canvas.
         const canvas = d.getInternalVar<LazyCanvas>('eats.lazycanvas')
 
         // Creating the arc layer.
-        const layer = new ArcLayer()
+        const layer = new TextLayer()
         .setX(parseInt(x))
         .setY(parseInt(y))
-        .setRadius(parseInt(radius))
         .setColor(color)
-        .setFilled(Boolean(filled ?? 'true'))
-        .setStroke(parseFloat(stroke ?? '1'))
+        .setFont(fontName)
+        .setFontSize(parseFloat(fontSize))
+        .setText(text)
+        .setAlign(<StringTextAlign>align ?? TextAlign.left)
         .setID(id ?? makeId(5))
         
         // Adding the layer.

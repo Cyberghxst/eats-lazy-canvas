@@ -1,5 +1,5 @@
 import type { ParameterDefinition } from 'easy-api.ts/lib/classes/structures/APIFunction'
-import { Addon, type API } from 'easy-api.ts'
+import { Addon, ParamType, type API } from 'easy-api.ts'
 import { join } from 'path'
 
 /**
@@ -24,9 +24,16 @@ export const makeId = (fresh = 8): string => {
  * @param text - The text to convert.
  * @returns {string}
  */
-export const toFormalCase = (text: string): string => {
-    return text.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+export const toCamelCase = (text: string): string => {
+    return text.split(' ')
+    .map((part, i) => i === 0 ? part.toLowerCase() : part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ')
 }
+
+/**
+ * The string parameter types from eats.
+ */
+const stringParamTypes = Object.keys(ParamType).filter(x => isNaN(Number(x)))
 
 /**
  * Makes the usage for a function.
@@ -35,9 +42,18 @@ export const toFormalCase = (text: string): string => {
  * @returns {string}
  */
 export const makeUsage = (name: string, params: ParameterDefinition[]): string => {
-    const usage = params.map(p => `${p.rest ? '...' : ''}${toFormalCase(p.name)}${p.required ? '' : '?'}`).join(';')
+    const usage = params.map(
+        p => `${
+            p.rest ? '...' : ''
+        }${toCamelCase(p.name)}${
+            p.required ? '' : '?'
+        }: ${
+            stringParamTypes[p.type].toLowerCase()
+        }`
+    )
+    .join(', ')
 
-    return `$${name}[${usage}]`
+    return `${name}[${usage}]`
 }
 
 /**
@@ -53,13 +69,15 @@ export class EATSLazyCanvas extends Addon {
         // Remove the default canvas functions.
         const all = api.functions.toArray()
         const fns = all.filter(t => t.name === '$createCanvas' || t.parent && t.parent.name === '$createCanvas')
-        fns.forEach(fn => api.functions.delete(fn.name))
+        for (const fn of fns) {
+            api.functions.delete(fn.name.toLowerCase())
+        }
 
         if (fns[0].name === '$createCanvas' && !api.functions.has(fns[0].name)) {
             console.info('Successfully removed the default canvas functions.')
         }
 
-        // Loading each function.
-        // api.functions.load(FUNCTIONS_DIR)
+        // Load the functions.
+        api.functions.load(FUNCTIONS_DIR)
     }
 }

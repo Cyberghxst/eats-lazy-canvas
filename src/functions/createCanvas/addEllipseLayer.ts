@@ -1,15 +1,15 @@
 import type { CompiledFunction } from 'easy-api.ts/lib/classes/internal/CompiledFunction'
+import { LazyCanvas, EllipseLayer, type Outline, StringCentering, Centering } from '@hitomihiumi/lazy-canvas'
 import { APIFunction, Data, Errors, ParamType, Util } from 'easy-api.ts'
-import { LazyCanvas, ArcLayer } from '@hitomihiumi/lazy-canvas'
 import { makeId, makeUsage } from '@structures/EATSLazyCanvas'
 import CreateCanvas from '@functions/createCanvas'
 
 /**
- * Function that creates a new arc layer.
+ * Function that creates a new ellipse layer.
  */
-export default class AddArcLayer extends APIFunction {
-    name = '$addArcLayer'
-    description = 'Adds an arc layer to the canvas.'
+export default class AddEllipseLayer extends APIFunction {
+    name = '$addEllipseLayer'
+    description = 'Adds an ellipse layer to the canvas.'
     parameters = [
         {
             name: 'X',
@@ -66,6 +66,23 @@ export default class AddArcLayer extends APIFunction {
             required: false,
             rest: false,
             defaultValue: null
+        },
+        {
+            name: 'Centering',
+            description: 'Whether the layer should be centered.',
+            type: ParamType.String,
+            required: false,
+            rest: false,
+            defaultValue: 'legacy',
+            allowedValues: Object.values(Centering)
+        },
+        {
+            name: 'Outline Name',
+            description: 'The name of the outline to use.',
+            type: ParamType.String,
+            required: false,
+            rest: false,
+            defaultValue: null
         }
     ]
     usage = makeUsage(this.name, this.parameters)
@@ -73,7 +90,7 @@ export default class AddArcLayer extends APIFunction {
     compile = true
     aliases = []
     parent = new CreateCanvas()
-    run = async function(this: CompiledFunction, d: Data, [x, y, radius, color, filled, stroke, id]: string[]) {
+    run = async function(this: CompiledFunction, d: Data, [x, y, radius, color, filled, stroke, id, centering, outlineName]: string[]) {
         // Checking the types.
         if (!Util.isNumber(x)) throw new Errors.InvalidType(this.name, 'x number', x);
         if (!Util.isNumber(y)) throw new Errors.InvalidType(this.name, 'y number', y);
@@ -84,7 +101,7 @@ export default class AddArcLayer extends APIFunction {
         const canvas = d.getInternalVar<LazyCanvas>('eats.lazycanvas')
 
         // Creating the arc layer.
-        const layer = new ArcLayer()
+        const layer = new EllipseLayer()
         .setX(parseInt(x))
         .setY(parseInt(y))
         .setRadius(parseInt(radius))
@@ -92,6 +109,9 @@ export default class AddArcLayer extends APIFunction {
         .setFilled(Boolean(filled ?? 'true'))
         .setStroke(parseFloat(stroke ?? '1'))
         .setID(id ?? makeId(5))
+
+        if (centering) layer.setCentering(<StringCentering>centering ?? Centering.legacy);
+        if (outlineName) layer.setOutline(d.getInternalVar<Outline>(`outline.${outlineName}`));
         
         // Adding the layer.
         canvas.addLayers(layer)
