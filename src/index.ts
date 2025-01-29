@@ -1,0 +1,1 @@
+export { EATSLazyCanvas } from '@structures/EATSLazyCanvas'

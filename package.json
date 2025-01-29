@@ -1,0 +1,21 @@
+{
+  "name": "@ea.ts/lazy-canvas",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && tsc-alias"
+  },
+  "keywords": [],
+  "author": "Cyberghxst",
+  "license": "Apache-2.0",
+  "packageManager": "pnpm@9.15.4",
+  "devDependencies": {
+    "easy-api.ts": "^3.7.8",
+    "tsc-alias": "^1.8.10"
+  },
+  "dependencies": {
+    "@hitomihiumi/lazy-canvas": "^1.5.1"
+  }
+}
